@@ -1,4 +1,4 @@
-package com.ericcleao.popularmovieapp;
+package com.ericcleao.popularmoviesapp;
 
 import org.junit.Test;
 
