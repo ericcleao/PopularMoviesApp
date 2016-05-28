@@ -1,9 +1,12 @@
 package com.ericcleao.popularmoviesapp;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,6 +28,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -43,14 +48,16 @@ public class MainActivityFragment extends Fragment {
 
         mPopularMoviesAdapter = new MovieAdapter(getActivity(), popularMovies);
 
-        GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
+        final GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
         gridView.setAdapter(mPopularMoviesAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(this.getClass().getSimpleName(), position + "");
             }
         });
+
 
         return rootView;
     }
@@ -58,16 +65,16 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        FetchPopularMoviesTask popularMoviesTask = new FetchPopularMoviesTask("pt");
+        FetchPopularMoviesTask popularMoviesTask = new FetchPopularMoviesTask();
         popularMoviesTask.execute();
     }
 
-    private class FetchPopularMoviesTask extends AsyncTask<Void, Void, Movie[]>{
+    private class FetchPopularMoviesTask extends AsyncTask<Void, Void, Movie[]> {
         private final String LOG_TAG = FetchPopularMoviesTask.class.getSimpleName();
         private String language;
 
-        public FetchPopularMoviesTask(String language) {
-            this.language = language;
+        public FetchPopularMoviesTask() {
+            this.language = Locale.getDefault().getLanguage();
         }
 
         @Override
@@ -75,46 +82,51 @@ public class MainActivityFragment extends Fragment {
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
-            // Will contain the raw JSON response as a string.
-            String popularMoviesJsonStr = null;
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
+            String type = preferences.getString(getString(R.string.pref_type_key), getString(R.string.pref_type_default));
+            int numPosters = Integer.valueOf(preferences.getString(getString(R.string.pref_numPoster_key),getString(R.string.pref_numPoster_default)));
             String apiKey = "fd8810612013a8d561d6243ca12f9975";
-            int page = 1;
+            int page = ((numPosters - 1) / 20) + 1;
             String language = this.language;
 
+            String[] popularMoviesJsonStr = new String[page];
+
             try {
-                final String FORECAST_BASE_URL = "http://api.themoviedb.org/3/movie/popular?";
+                final String FORECAST_BASE_URL = "http://api.themoviedb.org/3/movie/" + type + "?";
                 final String API_KEY_PARAM = "api_key";
                 final String PAGE_PARAM = "page";
                 final String LANGUAGE_PARAM = "language";
 
-                Uri uri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendQueryParameter(API_KEY_PARAM, apiKey)
-                        .appendQueryParameter(PAGE_PARAM, Integer.toString(page))
-                        .appendQueryParameter(LANGUAGE_PARAM, language)
-                        .build();
+                for (int i = 1; i <= page; ++i) {
+                    Uri uri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                            .appendQueryParameter(API_KEY_PARAM, apiKey)
+                            .appendQueryParameter(PAGE_PARAM, Integer.toString(i))
+                            .appendQueryParameter(LANGUAGE_PARAM, language)
+                            .build();
 
-                URL url = new URL(uri.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();// Read the input stream into a String
+                    URL url = new URL(uri.toString());
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.connect();// Read the input stream into a String
 
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    return null;
+                    InputStream inputStream = urlConnection.getInputStream();
+                    StringBuffer buffer = new StringBuffer();
+                    if (inputStream == null) {
+                        return null;
+                    }
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line + "\n");
+                    }
+
+                    if (buffer.length() == 0) {
+                        return null;
+                    }
+                    popularMoviesJsonStr[i - 1] = buffer.toString();
                 }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    return null;
-                }
-                popularMoviesJsonStr = buffer.toString();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -131,8 +143,9 @@ public class MainActivityFragment extends Fragment {
                     }
                 }
             }
+
             try {
-                return getPopularMoviesDataFromJson(popularMoviesJsonStr, 20);
+                return getPopularMoviesDataFromJson(popularMoviesJsonStr, numPosters);
             } catch (JSONException e) {
                 e.printStackTrace();
                 return null;
@@ -141,7 +154,7 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Movie[] movies) {
-            if (movies != null){
+            if (movies != null) {
                 mPopularMoviesAdapter.clear();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                     mPopularMoviesAdapter.addAll(movies);
@@ -156,8 +169,11 @@ public class MainActivityFragment extends Fragment {
             super.onPostExecute(movies);
         }
 
-        private Movie[] getPopularMoviesDataFromJson(String popularMoviesJsonStr, int numMovies)
+        private Movie[] getPopularMoviesDataFromJson(String[] popularMoviesJsonStr,
+                                                     int numPosters)
                 throws JSONException {
+
+            int page = ((numPosters - 1) / 20) + 1;
 
             final String OWM_RESULTS = "results";
             final String OWM_TITLE = "title";
@@ -166,34 +182,42 @@ public class MainActivityFragment extends Fragment {
             final String OWM_MOVIEID = "id";
             final String OWM_POSTER = "poster_path";
 
-            JSONObject popularMoviesJson = new JSONObject(popularMoviesJsonStr);
-            JSONArray resultsArray = popularMoviesJson.getJSONArray(OWM_RESULTS);
+            Movie[] movies = new Movie[numPosters];
 
-            String[] resultStrs = new String[numMovies];
-            Movie[] movies = new Movie[numMovies];
-            for (int i = 0; i < resultsArray.length(); i++) {
-                // For now, using the format "Day, description, hi/low"
-                String title;
-                double vote;
-                String overview;
-                String id;
-                String posterPath;
+            for (int i = 0; i < page; ++i) {
+                JSONObject popularMoviesJson = new JSONObject(popularMoviesJsonStr[i]);
+                JSONArray resultsArray = popularMoviesJson.getJSONArray(OWM_RESULTS);
 
-                // Get the JSON object representing the day
-                JSONObject movie = resultsArray.getJSONObject(i);
+                int aux;
+                if (i < page - 1) {
+                    aux = 20;
+                } else {
+                    aux = numPosters - i * 20;
+                }
 
-                title = movie.getString(OWM_TITLE);
+                for (int j = 0; j < aux; j++) {
+                    // For now, using the format "Day, description, hi/low"
+                    String title;
+                    double vote;
+                    String overview;
+                    String id;
+                    String posterPath;
 
-                vote = movie.getDouble(OWM_VOTE);
+                    // Get the JSON object representing the day
+                    JSONObject movie = resultsArray.getJSONObject(j);
 
-                overview = movie.getString(OWM_OVERVIEW);
+                    title = movie.getString(OWM_TITLE);
 
-                id = movie.getString(OWM_MOVIEID);
+                    vote = movie.getDouble(OWM_VOTE);
 
-                posterPath = movie.getString(OWM_POSTER);
+                    overview = movie.getString(OWM_OVERVIEW);
 
-                movies[i] = new Movie(id, title, overview, posterPath, vote);
-                resultStrs[i] = id + title + " - " + vote + " - " + overview + posterPath;
+                    id = movie.getString(OWM_MOVIEID);
+
+                    posterPath = movie.getString(OWM_POSTER);
+
+                    movies[i * 20 + j] = new Movie(id, title, overview, posterPath, vote);
+                }
             }
 
             return movies;

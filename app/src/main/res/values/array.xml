@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pref_type_options">
+        <item>Top Rated</item>
+        <item>Popular</item>
+        <item>Now Playing</item>
+        <item>Upcoming</item>
+    </string-array>
+    <string-array name="pref_type_values">
+        <item>top_rated</item>
+        <item>popular</item>
+        <item>now_playing</item>
+        <item>upcoming</item>
+    </string-array>
+</resources>

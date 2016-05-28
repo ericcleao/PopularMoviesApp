@@ -1,4 +1,10 @@
 <resources>
-    <string name="app_name">Popular Movies App</string>
+    <string name="app_name" translatable="false">Popular Movies App</string>
     <string name="action_settings">Settings</string>
+    <string name="pref_numPoster_key" translatable="false">numPoster</string>
+    <string name="pref_numPoster_label">Number of posters</string>
+    <string name="pref_numPoster_default">20</string>
+    <string name="pref_type_key">type</string>
+    <string name="pref_type_label">Type</string>
+    <string name="pref_type_default">top_rated</string>
 </resources>

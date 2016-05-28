@@ -19,8 +19,9 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         MovieView movieView = (MovieView)convertView;
-        if (null == movieView)
+        if (null == movieView) {
             movieView = MovieView.inflate(parent);
+        }
         movieView.setMovie(getItem(position));
         return movieView;
     }

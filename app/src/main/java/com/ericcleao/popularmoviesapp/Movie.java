@@ -3,6 +3,7 @@ package com.ericcleao.popularmoviesapp;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -11,7 +12,7 @@ import java.net.URL;
 /**
  * Created by Eric Cerqueira on 20/05/2016.
  */
-public class Movie {
+public class Movie{
     private String id, title, overview, posterPath;
     private Bitmap poster;
     private double vote;
@@ -22,8 +23,10 @@ public class Movie {
         this.overview = overview;
         this.posterPath = posterPath;
         this.vote = vote;
-        new ImageLoadTask().execute("https://image.tmdb.org/t/p/w396" + this.posterPath);
+        //new ImageLoadTask().execute("https://image.tmdb.org/t/p/w396" + this.posterPath);
     }
+
+    public void createMovie(){}
 
     public Bitmap getPoster() {
         return poster;
@@ -33,8 +36,27 @@ public class Movie {
         return id;
     }
 
+    public double getVote() {
+        return vote;
+    }
 
-    private class ImageLoadTask extends AsyncTask<String, Void, Bitmap> {
+    public String getPosterPath() {
+        return posterPath;
+    }
+
+    public void setPoster(Bitmap poster) {
+        this.poster = poster;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    /*private class ImageLoadTask extends AsyncTask<String, Void, Bitmap> {
 
         public ImageLoadTask() {}
 
@@ -58,7 +80,10 @@ public class Movie {
         @Override
         protected void onPostExecute(Bitmap result) {
             super.onPostExecute(result);
-            poster = result;
+            if (result != null)
+                poster = result;
+            else
+                Log.d(this.getClass().getSimpleName(), "Poster equals null!");
         }
-    }
+    } */
 }

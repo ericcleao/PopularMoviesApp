@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:defaultValue="@string/pref_numPoster_default"
+        android:inputType="number"
+        android:key="@string/pref_numPoster_key"
+        android:singleLine="true"
+        android:title="@string/pref_numPoster_label" />
+
+    <ListPreference
+        android:defaultValue="@string/pref_type_default"
+        android:entries="@array/pref_type_options"
+        android:entryValues="@array/pref_type_values"
+        android:key="@string/pref_type_key"
+        android:title="@string/pref_type_label" />
+</PreferenceScreen>

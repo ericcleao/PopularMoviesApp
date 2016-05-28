@@ -1,17 +1,23 @@
 package com.ericcleao.popularmoviesapp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+
+import java.util.ArrayList;
 
 /**
  * Created by Eric Cerqueira on 20/05/2016.
  */
 public class MovieView extends FrameLayout {
     ImageView posterImageView;
+    Movie movie;
 
     public MovieView(Context context) {
         this(context, null);
@@ -38,6 +44,11 @@ public class MovieView extends FrameLayout {
     }
 
     public void setMovie(Movie movie) {
-        posterImageView.setImageBitmap(movie.getPoster());
+        this.movie = movie;
+       if (movie.getPoster() == null) {
+           new ImageDownloaderTask(posterImageView, movie).execute("https://image.tmdb.org/t/p/w396" + movie.getPosterPath());
+       }
+        else
+            posterImageView.setImageBitmap(movie.getPoster());
     }
 }
