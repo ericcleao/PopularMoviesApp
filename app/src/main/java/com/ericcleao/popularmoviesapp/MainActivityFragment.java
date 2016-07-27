@@ -1,5 +1,6 @@
 package com.ericcleao.popularmoviesapp;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -54,7 +55,16 @@ public class MainActivityFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(this.getClass().getSimpleName(), position + "");
+                Bundle movie = new Bundle();
+                movie.putString("id", ((Movie)parent.getAdapter().getItem(position)).getId());
+                movie.putString("title", ((Movie)parent.getAdapter().getItem(position)).getTitle());
+                movie.putString("overview", ((Movie)parent.getAdapter().getItem(position)).getOverview());
+                movie.putDouble("vote", ((Movie)parent.getAdapter().getItem(position)).getVote());
+                movie.putString("posterPath", ((Movie)parent.getAdapter().getItem(position)).getPosterPath());
+
+                Intent intent = new Intent(getActivity(), DetailActivity.class);
+                intent.putExtra("movie", movie);
+                startActivity(intent);
             }
         });
 
